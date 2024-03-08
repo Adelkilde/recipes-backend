@@ -4,9 +4,11 @@ import dat3.recipe.dto.RecipeDto;
 import dat3.recipe.service.RecipeService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.http.CacheControl;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 @RestController
 @RequestMapping("/recipes")
@@ -19,12 +21,18 @@ public class RecipeController {
     }
 
     @GetMapping
-    public List<RecipeDto> getAllRecipes(@RequestParam(required = false) String category) {
-        if(category != null) {
-            System.out.println("Category: " + category);
-        }
-        return recipeService.getAllRecipes(category);
+    public ResponseEntity<List<RecipeDto>> getAllRecipes(@RequestParam(required = false) String category) {
+    if(category != null) {
+        System.out.println("Category: " + category);
     }
+    List<RecipeDto> recipes = recipeService.getAllRecipes(category);
+
+    CacheControl cacheControl = CacheControl.maxAge(2, TimeUnit.MINUTES).cachePublic();
+
+    return ResponseEntity.ok()
+            .cacheControl(cacheControl)
+            .body(recipes);
+}
 
     @GetMapping(path ="/{id}")
     public RecipeDto getRecipeById(@PathVariable int id) {
